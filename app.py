@@ -30,15 +30,24 @@ migrate = Migrate(app, db)
 
 class Venue(db.Model):
     __tablename__ = 'venue'
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    cityid = db.Column(db.Integer, db.ForeignKey('city.id'), nullable=False)
+    def __repr__(self):
+        return f'<Venue {self.id} {self.name}>'
+
+class City(db.Model):
+    __tablename__ = 'city'
+    id = db.Column(db.Integer, primary_key=True)
+    city = db.Column(db.String(120))
+    state = db.Column(db.String(120))
+    venues = db.relationship('Venue', backref='list', lazy=True)
+    def __repr__(self):
+        return f'<City {self.id} {self.city}>'
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
