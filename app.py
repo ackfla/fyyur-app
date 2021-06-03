@@ -33,8 +33,8 @@ class City(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
-    venues = db.relationship('Venue', backref='list', lazy=True)
-    artists = db.relationship('Artist', backref='list', lazy=True)
+    venues = db.relationship('Venue', backref='city', lazy=True)
+    artists = db.relationship('Artist', backref='city', lazy=True)
     def __repr__(self):
         return f'<City {self.id} {self.city}>'
 
@@ -64,6 +64,7 @@ class Artist(db.Model):
     seeking_venue = db.Column(db.Boolean(), default=False)
     seeking_description = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
+    shows = db.relationship('Show', backref='artist', lazy=True)
     def __repr__(self):
         return f'<Artist {self.id} {self.name}>'
 
@@ -85,7 +86,10 @@ class Show(db.Model):
 #----------------------------------------------------------------------------#
 
 def format_datetime(value, format='medium'):
-  date = dateutil.parser.parse(value)
+  if isinstance(value, str):
+      date = dateutil.parser.parse(value)
+  else:
+      date = value
   if format == 'full':
       format="EEEE MMMM, d, y 'at' h:mma"
   elif format == 'medium':
@@ -139,12 +143,21 @@ def search_venues():
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
-    data = list(Venue.query.filter_by(id=venue_id).all())[0]
-    # Add city info
-    location = list(City.query.filter_by(id=data.cityid).all())[0]
-    data.city = location.city
-    data.state = location.state
-    # EO Add city info
+    venue = Venue.query.filter_by(id=venue_id).all()[0]
+    location = City.query.filter_by(id=venue.cityid).all()[0]
+    data = {
+      "id": venue.id,
+      "name": venue.name,
+      "address": venue.address,
+      "city": location.city,
+      "state": location.state,
+      "phone": venue.phone,
+      "website": venue.website,
+      "facebook_link": venue.facebook_link,
+      "seeking_talent": venue.seeking_talent,
+      "seeking_description": venue.seeking_description,
+      "image_link": venue.image_link
+    }
     return render_template('pages/show_venue.html', venue=data)
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
@@ -279,12 +292,20 @@ def search_artists():
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    data = list(Artist.query.filter_by(id=artist_id).all())[0]
-    # Add city info
-    location = list(City.query.filter_by(id=data.cityid).all())[0]
-    data.city = location.city
-    data.state = location.state
-    # EO Add city info
+    artist = list(Artist.query.filter_by(id=artist_id).all())[0]
+    location = list(City.query.filter_by(id=artist.cityid).all())[0]
+    data = {
+      "id": artist.id,
+      "name": artist.name,
+      "city": location.city,
+      "state": location.state,
+      "phone": artist.phone,
+      "website": artist.website,
+      "facebook_link": artist.facebook_link,
+      "seeking_venue": artist.seeking_venue,
+      "seeking_description": artist.seeking_description,
+      "image_link": artist.image_link
+    }
     return render_template('pages/show_artist.html', artist=data)
   # shows the artist page with the given artist_id
   # TODO: replace with real artist data from the artist table, using artist_id
@@ -391,46 +412,22 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-  # displays list of shows at /shows
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "venue_id": 1,
-    "venue_name": "The Musical Hop",
-    "artist_id": 4,
-    "artist_name": "Guns N Petals",
-    "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-    "start_time": "2019-05-21T21:30:00.000Z"
-  }, {
-    "venue_id": 3,
-    "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 5,
-    "artist_name": "Matt Quevedo",
-    "artist_image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-    "start_time": "2019-06-15T23:00:00.000Z"
-  }, {
-    "venue_id": 3,
-    "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 6,
-    "artist_name": "The Wild Sax Band",
-    "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-    "start_time": "2035-04-01T20:00:00.000Z"
-  }, {
-    "venue_id": 3,
-    "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 6,
-    "artist_name": "The Wild Sax Band",
-    "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-    "start_time": "2035-04-08T20:00:00.000Z"
-  }, {
-    "venue_id": 3,
-    "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 6,
-    "artist_name": "The Wild Sax Band",
-    "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-    "start_time": "2035-04-15T20:00:00.000Z"
-  }]
-  return render_template('pages/shows.html', shows=data)
+    data = []
+    shows = Show.query.all()
+    for show in shows:
+        venue = list(Venue.query.filter_by(id=show.venueid).all())[0] # Get venue info
+        artist = Artist.query.filter_by(id=show.artistid).all()[0] # Get artist info
+        show = {
+            "venue_id": venue.id,
+            "venue_name": venue.name,
+            "artist_id": show.artistid,
+            "artist_name": artist.name,
+            "artist_image_link": artist.image_link,
+            "start_time": show.start_time,
+            "num_shows": 0   # TODO: num_shows should be aggregated based on number of upcoming shows per venue.
+        }
+        data.append(show)
+    return render_template('pages/shows.html', shows=data)
 
 @app.route('/shows/create')
 def create_shows():
