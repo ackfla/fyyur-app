@@ -13,6 +13,7 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
+from datetime import date
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -50,6 +51,7 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean(), default=False)
     seeking_description = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
+    shows = db.relationship('Show', backref='venue', lazy=True)
     def __repr__(self):
         return f'<Venue {self.id} {self.name}>'
 
@@ -292,19 +294,46 @@ def search_artists():
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    artist = list(Artist.query.filter_by(id=artist_id).all())[0]
-    location = list(City.query.filter_by(id=artist.cityid).all())[0]
+    artist = Artist.query.filter_by(id=artist_id).all()[0]
+    today = date.today()
+    # Upcoming shows
+    upcoming_shows = Show.query.filter(Show.artistid == artist.id, Show.start_time > today).all()
+    shows_upcoming = []
+    for upcoming_show in upcoming_shows:
+        show = {
+            "venue_name": upcoming_show.venue.name,
+            "venue_image_link": upcoming_show.venue.image_link,
+            "start_time": past_show.start_time
+        }
+        shows_upcoming.append(show)
+    # EO Upcoming shows
+    # Past shows
+    past_shows = Show.query.filter(Show.artistid == artist.id, Show.start_time <= today).all()
+    shows_past = []
+    for past_show in past_shows:
+        show = {
+            "venue_id": past_show.venue.id,
+            "venue_name": past_show.venue.name,
+            "venue_image_link": past_show.venue.image_link,
+            "start_time": past_show.start_time
+        }
+        shows_past.append(show)
+    # EO Past shows
     data = {
       "id": artist.id,
       "name": artist.name,
-      "city": location.city,
-      "state": location.state,
+      "city": artist.city.city,
+      "state": artist.city.state,
       "phone": artist.phone,
       "website": artist.website,
       "facebook_link": artist.facebook_link,
       "seeking_venue": artist.seeking_venue,
       "seeking_description": artist.seeking_description,
-      "image_link": artist.image_link
+      "image_link": artist.image_link,
+      "past_shows": shows_past,
+      "upcoming_shows": shows_upcoming,
+      "past_shows_count": len(past_shows),
+      "upcoming_shows_count": len(upcoming_shows)
     }
     return render_template('pages/show_artist.html', artist=data)
   # shows the artist page with the given artist_id
@@ -415,14 +444,12 @@ def shows():
     data = []
     shows = Show.query.all()
     for show in shows:
-        venue = list(Venue.query.filter_by(id=show.venueid).all())[0] # Get venue info
-        artist = Artist.query.filter_by(id=show.artistid).all()[0] # Get artist info
         show = {
-            "venue_id": venue.id,
-            "venue_name": venue.name,
+            "venue_id": show.venue.id,
+            "venue_name": show.venue.name,
             "artist_id": show.artistid,
-            "artist_name": artist.name,
-            "artist_image_link": artist.image_link,
+            "artist_name": show.artist.name,
+            "artist_image_link": show.artist.image_link,
             "start_time": show.start_time,
             "num_shows": 0   # TODO: num_shows should be aggregated based on number of upcoming shows per venue.
         }
