@@ -140,6 +140,11 @@ def search_venues():
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
     data = list(Venue.query.filter_by(id=venue_id).all())[0]
+    # Add city info
+    location = list(City.query.filter_by(id=data.cityid).all())[0]
+    data.city = location.city
+    data.state = location.state
+    # EO Add city info
     return render_template('pages/show_venue.html', venue=data)
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
@@ -275,6 +280,11 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
     data = list(Artist.query.filter_by(id=artist_id).all())[0]
+    # Add city info
+    location = list(City.query.filter_by(id=data.cityid).all())[0]
+    data.city = location.city
+    data.state = location.state
+    # EO Add city info
     return render_template('pages/show_artist.html', artist=data)
   # shows the artist page with the given artist_id
   # TODO: replace with real artist data from the artist table, using artist_id
