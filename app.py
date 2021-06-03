@@ -49,20 +49,23 @@ class City(db.Model):
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
     venues = db.relationship('Venue', backref='list', lazy=True)
+    artists = db.relationship('Artist', backref='list', lazy=True)
     def __repr__(self):
         return f'<City {self.id} {self.city}>'
 
 class Artist(db.Model):
     __tablename__ = 'artist'
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
+    cityid = db.Column(db.Integer, db.ForeignKey('city.id'), nullable=False)
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
+    website = db.Column(db.String(120))
     facebook_link = db.Column(db.String(120))
+    seeking_venue = db.Column(db.Boolean(), default=False)
+    seeking_description = db.Column(db.String(120))
+    image_link = db.Column(db.String(500))
+    def __repr__(self):
+        return f'<Artist {self.id} {self.name}>'
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -242,17 +245,7 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
-  # TODO: replace with real data returned from querying the database
-  data=[{
-    "id": 4,
-    "name": "Guns N Petals",
-  }, {
-    "id": 5,
-    "name": "Matt Quevedo",
-  }, {
-    "id": 6,
-    "name": "The Wild Sax Band",
-  }]
+  data = Artist.query.with_entities(Artist.id, Artist.name)
   return render_template('pages/artists.html', artists=data)
 
 @app.route('/artists/search', methods=['POST'])
