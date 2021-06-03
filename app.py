@@ -28,6 +28,16 @@ migrate = Migrate(app, db)
 # Models.
 #----------------------------------------------------------------------------#
 
+class City(db.Model):
+    __tablename__ = 'city'
+    id = db.Column(db.Integer, primary_key=True)
+    city = db.Column(db.String(120))
+    state = db.Column(db.String(120))
+    venues = db.relationship('Venue', backref='list', lazy=True)
+    artists = db.relationship('Artist', backref='list', lazy=True)
+    def __repr__(self):
+        return f'<City {self.id} {self.city}>'
+
 class Venue(db.Model):
     __tablename__ = 'venue'
     id = db.Column(db.Integer, primary_key=True)
@@ -43,16 +53,6 @@ class Venue(db.Model):
     def __repr__(self):
         return f'<Venue {self.id} {self.name}>'
 
-class City(db.Model):
-    __tablename__ = 'city'
-    id = db.Column(db.Integer, primary_key=True)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    venues = db.relationship('Venue', backref='list', lazy=True)
-    artists = db.relationship('Artist', backref='list', lazy=True)
-    def __repr__(self):
-        return f'<City {self.id} {self.city}>'
-
 class Artist(db.Model):
     __tablename__ = 'artist'
     id = db.Column(db.Integer, primary_key=True)
@@ -66,6 +66,15 @@ class Artist(db.Model):
     image_link = db.Column(db.String(500))
     def __repr__(self):
         return f'<Artist {self.id} {self.name}>'
+
+class Show(db.Model):
+    __tablename__ = 'show'
+    id = db.Column(db.Integer, primary_key=True)
+    artistid = db.Column(db.Integer, db.ForeignKey('artist.id'), nullable=False)
+    venueid = db.Column(db.Integer, db.ForeignKey('venue.id'), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    def __repr__(self):
+        return f'<Show {self.id} {self.start_time}>'
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
