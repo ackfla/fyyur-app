@@ -146,19 +146,47 @@ def search_venues():
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
     venue = Venue.query.filter_by(id=venue_id).all()[0]
-    location = City.query.filter_by(id=venue.cityid).all()[0]
+    today = date.today()
+    # Upcoming shows
+    upcoming_shows = Show.query.filter(Show.venueid == venue.id, Show.start_time > today).all()
+    shows_upcoming = []
+    for upcoming_show in upcoming_shows:
+        show = {
+            "artist_id": upcoming_show.artist.id,
+            "artist_name": upcoming_show.artist.name,
+            "artist_image_link": upcoming_show.artist.image_link,
+            "start_time": upcoming_show.start_time
+        }
+        shows_upcoming.append(show)
+    # EO Upcoming shows
+    # Past shows
+    past_shows = Show.query.filter(Show.venueid == venue.id, Show.start_time <= today).all()
+    shows_past = []
+    for past_show in past_shows:
+        show = {
+            "artist_id": past_show.artist.id,
+            "artist_name": past_show.artist.name,
+            "artist_image_link": past_show.artist.image_link,
+            "start_time": past_show.start_time
+        }
+        shows_past.append(show)
+    # EO Past shows
     data = {
       "id": venue.id,
       "name": venue.name,
       "address": venue.address,
-      "city": location.city,
-      "state": location.state,
+      "city": venue.city.city,
+      "state": venue.city.state,
       "phone": venue.phone,
       "website": venue.website,
       "facebook_link": venue.facebook_link,
       "seeking_talent": venue.seeking_talent,
       "seeking_description": venue.seeking_description,
-      "image_link": venue.image_link
+      "image_link": venue.image_link,
+      "past_shows": shows_past,
+      "upcoming_shows": shows_upcoming,
+      "past_shows_count": len(past_shows),
+      "upcoming_shows_count": len(upcoming_shows)
     }
     return render_template('pages/show_venue.html', venue=data)
   # shows the venue page with the given venue_id
@@ -301,9 +329,10 @@ def show_artist(artist_id):
     shows_upcoming = []
     for upcoming_show in upcoming_shows:
         show = {
+            "venue_id": upcoming_show.venue.id,
             "venue_name": upcoming_show.venue.name,
             "venue_image_link": upcoming_show.venue.image_link,
-            "start_time": past_show.start_time
+            "start_time": upcoming_show.start_time
         }
         shows_upcoming.append(show)
     # EO Upcoming shows
