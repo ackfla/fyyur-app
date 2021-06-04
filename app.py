@@ -146,22 +146,23 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  # seach for Hop should return "The Musical Hop".
-  # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-  response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }
-  return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
+    search_term = '%' + request.form.get('search_term') + '%'
+    results = Venue.query.filter(Venue.name.ilike(search_term)).all() # Use ilike query as case insensitive
+    response={
+      "count": len(results),
+      "data": []
+    }
+    for result in results:
+        artist = {
+          "id": result.id,
+          "name": result.name
+        }
+        response['data'].append(artist)
+    return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
-    venue = Venue.query.filter_by(id=venue_id).all()[0]
+    venue = Venue.query.filter_by(id=venue_id).first()
     today = date.today()
     # Upcoming shows
     upcoming_shows = Show.query.filter(Show.venueid == venue.id, Show.start_time > today).all()
@@ -277,22 +278,23 @@ def artists():
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
-  # search for "band" should return "The Wild Sax Band".
-  response={
-    "count": 1,
-    "data": [{
-      "id": 4,
-      "name": "Guns N Petals",
-      "num_upcoming_shows": 0,
-    }]
-  }
-  return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
+    search_term = '%' + request.form.get('search_term') + '%'
+    results = Artist.query.filter(Artist.name.ilike(search_term)).all() # Use ilike query as case insensitive
+    response={
+      "count": len(results),
+      "data": []
+    }
+    for result in results:
+        artist = {
+          "id": result.id,
+          "name": result.name
+        }
+        response['data'].append(artist)
+    return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    artist = Artist.query.filter_by(id=artist_id).all()[0]
+    artist = Artist.query.filter_by(id=artist_id).first()
     today = date.today()
     # Upcoming shows
     upcoming_shows = Show.query.filter(Show.artistid == artist.id, Show.start_time > today).all()
@@ -346,7 +348,7 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-  artist = Artist.query.filter_by(id=artist_id).all()[0]
+  artist = Artist.query.filter_by(id=artist_id).first()
   form = ArtistForm()
   # Populate form with db data
   form.name.data = artist.name
@@ -403,7 +405,7 @@ def edit_artist_submission(artist_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-    venue = Venue.query.filter_by(id=venue_id).all()[0]
+    venue = Venue.query.filter_by(id=venue_id).first()
     form = VenueForm()
     # Populate form with db data
     form.name.data = venue.name
