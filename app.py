@@ -48,6 +48,7 @@ class Venue(db.Model):
     phone = db.Column(db.String(120))
     website = db.Column(db.String(120))
     facebook_link = db.Column(db.String(120))
+    genres = db.Column(db.String(500))
     seeking_talent = db.Column(db.Boolean(), default=False)
     seeking_description = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
@@ -185,6 +186,11 @@ def show_venue(venue_id):
         }
         shows_past.append(show)
     # EO Past shows
+    # Generate genre list
+    genres = []
+    if isinstance(venue.genres, str):
+        genres = venue.genres.split(',')
+    # EO Generate genre list
     data = {
       "id": venue.id,
       "name": venue.name,
@@ -194,6 +200,7 @@ def show_venue(venue_id):
       "phone": venue.phone,
       "website": venue.website,
       "facebook_link": venue.facebook_link,
+      "genres": genres,
       "seeking_talent": venue.seeking_talent,
       "seeking_description": venue.seeking_description,
       "image_link": venue.image_link,
