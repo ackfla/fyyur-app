@@ -355,6 +355,7 @@ def edit_artist(artist_id):
   form.phone.data = artist.phone
   form.website_link.data = artist.website
   form.facebook_link.data = artist.facebook_link
+  form.genres.data = artist.genres
   form.seeking_venue.data = artist.seeking_venue
   form.seeking_description.data = artist.seeking_description
   form.image_link.data = artist.image_link
@@ -412,6 +413,7 @@ def edit_venue(venue_id):
     form.phone.data = venue.phone
     form.website_link.data = venue.website
     form.facebook_link.data = venue.facebook_link
+    form.genres.data = venue.genres
     form.seeking_talent.data = venue.seeking_talent
     form.seeking_description.data = venue.seeking_description
     form.image_link.data = venue.image_link
@@ -518,8 +520,7 @@ def shows():
             "artist_id": show.artistid,
             "artist_name": show.artist.name,
             "artist_image_link": show.artist.image_link,
-            "start_time": show.start_time,
-            "num_shows": 0   # TODO: num_shows should be aggregated based on number of upcoming shows per venue.
+            "start_time": show.start_time
         }
         data.append(show)
     return render_template('pages/shows.html', shows=data)
