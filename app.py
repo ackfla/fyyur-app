@@ -435,7 +435,8 @@ def create_artist_submission():
 @app.route('/shows')
 def shows():
     data = []
-    shows = Show.query.all()
+    today = date.today()
+    shows = Show.query.filter(Show.start_time>today).all()
     for show in shows:
         show = {
             "venue_id": show.venue.id,
