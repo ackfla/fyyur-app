@@ -97,6 +97,24 @@ def format_datetime(value, format='medium'):
 
 app.jinja_env.filters['datetime'] = format_datetime
 
+
+#----------------------------------------------------------------------------#
+# Get City Id.
+#----------------------------------------------------------------------------#
+
+def get_city(city_name, state_code):
+    # Check db for existing city, state
+    city = City.query.filter_by(city=city_name, state=state_code)
+    if city.count(): # Check if city already exists
+        return city.id
+    else: # Else create new city entry in db
+        city_id = ''
+        new_city = City(city=city_name, state=state_code)
+        db.session.add(new_city)
+        db.session.flush()
+        city_id = new_city.id
+        return city_id
+
 #----------------------------------------------------------------------------#
 # Controllers.
 #----------------------------------------------------------------------------#
@@ -197,23 +215,11 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    # EO Check db for submitted city, state
+    # Check db for submitted city, state
     city_name = request.form.get('city')
     state_code = request.form.get('state')
-    city = City.query.filter_by(city=city_name, state=state_code)
+    cityid = get_city(city_name, state_code)
     # EO Check db for submitted city, state
-    if city.count():
-        cityid = city[0].id  # grab id for existing entry
-    else:
-        # Enter new city into db
-        newcity = City(
-            city = city_name,
-            state = state_code
-        )
-        db.session.add(newcity)
-        db.session.flush()
-        # EO Enter new city into db
-        cityid = newcity.id # grab id for new entry
     venue = Venue(
         name=request.form.get('name'),
         address=request.form.get('address'),
@@ -241,7 +247,6 @@ def create_venue_submission():
     else:
         flash('Venue ' + request.form['name'] + ' was successfully listed!')
         return render_template('pages/home.html')
-
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
@@ -380,23 +385,11 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-    # EO Check db for submitted city, state
+    # Check db for submitted city, state
     city_name = request.form.get('city')
     state_code = request.form.get('state')
-    city = City.query.filter_by(city=city_name, state=state_code)
+    cityid = get_city(city_name, state_code)
     # EO Check db for submitted city, state
-    if city.count():
-        cityid = city[0].id  # grab id for existing entry
-    else:
-        # Enter new city into db
-        newcity = City(
-            city = city_name,
-            state = state_code
-        )
-        db.session.add(newcity)
-        db.session.flush()
-        # EO Enter new city into db
-        cityid = newcity.id # grab id for new entry
     artist = Artist(
         name=request.form.get('name'),
         cityid=cityid,
@@ -423,11 +416,6 @@ def create_artist_submission():
     else:
         flash('Artist ' + request.form['name'] + ' was successfully listed!')
         return render_template('pages/home.html')
-
-
-  # called upon submitting the new artist listing form
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
 
 #  Shows
 #  ----------------------------------------------------------------
