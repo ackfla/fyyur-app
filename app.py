@@ -14,7 +14,6 @@ from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
 from datetime import date
-import sys
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -238,7 +237,6 @@ def create_venue_submission():
     except:
         error = True
         db.session.rollback()
-        print(sys.exc_info())
     finally:
         db.session.close()
     if error:
@@ -368,7 +366,6 @@ def edit_artist_submission(artist_id):
     except:
         error = True
         db.session.rollback()
-        print(sys.exc_info())
     finally:
         db.session.close()
     if error:
@@ -422,7 +419,6 @@ def edit_venue_submission(venue_id):
     except:
         error = True
         db.session.rollback()
-        print(sys.exc_info())
     finally:
         db.session.close()
     if error:
@@ -464,7 +460,6 @@ def create_artist_submission():
     except:
         error = True
         db.session.rollback()
-        print(sys.exc_info())
     finally:
         db.session.close()
     if error:
@@ -515,7 +510,6 @@ def create_show_submission():
     except:
         error = True
         db.session.rollback()
-        print(sys.exc_info())
     finally:
         db.session.close()
     if error:
