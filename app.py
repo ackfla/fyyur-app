@@ -64,6 +64,7 @@ class Artist(db.Model):
     phone = db.Column(db.String(120))
     website = db.Column(db.String(120))
     facebook_link = db.Column(db.String(120))
+    genres = db.Column(db.String(500))
     seeking_venue = db.Column(db.Boolean(), default=False)
     seeking_description = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
@@ -312,6 +313,11 @@ def show_artist(artist_id):
         }
         shows_past.append(show)
     # EO Past shows
+    # Generate genre list
+    genres = []
+    if isinstance(artist.genres, str):
+        genres = artist.genres.split(',')
+    # EO Generate genre list
     data = {
       "id": artist.id,
       "name": artist.name,
@@ -320,6 +326,7 @@ def show_artist(artist_id):
       "phone": artist.phone,
       "website": artist.website,
       "facebook_link": artist.facebook_link,
+      "genres": genres,
       "seeking_venue": artist.seeking_venue,
       "seeking_description": artist.seeking_description,
       "image_link": artist.image_link,
