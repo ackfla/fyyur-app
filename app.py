@@ -227,14 +227,19 @@ def create_venue_submission():
     state_code = request.form.get('state')
     cityid = get_city(city_name, state_code)
     # EO Check db for submitted city, state
+    # Generate genre list
+    genres = request.form.getlist('genres') # Fetch list from form
+    genres =  ",".join(genres) # Convert to comma separated string to store in db
+    # EO Generate genre list
     venue = Venue(
         name=request.form.get('name'),
         address=request.form.get('address'),
         cityid=cityid,
         phone=request.form.get('phone'),
         website=request.form.get('website_link'),
+        genres=genres,
         facebook_link=request.form.get('facebook_link'),
-        seeking_talent=request.form.get('seeking_talent'),
+        seeking_talent=bool(request.form.get('seeking_talent')), # bool() to convert into boolean SQLAlchemy likes...
         seeking_description=request.form.get('seeking_description'),
         image_link=request.form.get('image_link')
     )
@@ -467,13 +472,18 @@ def create_artist_submission():
     state_code = request.form.get('state')
     cityid = get_city(city_name, state_code)
     # EO Check db for submitted city, state
+    # Generate genre list
+    genres = request.form.getlist('genres') # Fetch list from form
+    genres =  ",".join(genres) # Convert to comma separated string to store in db
+    # EO Generate genre list
     artist = Artist(
         name=request.form.get('name'),
         cityid=cityid,
         phone=request.form.get('phone'),
         website=request.form.get('website_link'),
         facebook_link=request.form.get('facebook_link'),
-        seeking_venue=request.form.get('seeking_venue'),
+        genres=genres,
+        seeking_venue=bool(request.form.get('seeking_venue')), # bool() to convert into boolean SQLAlchemy likes...
         seeking_description=request.form.get('seeking_description'),
         image_link=request.form.get('image_link')
     )
