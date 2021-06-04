@@ -106,7 +106,7 @@ def get_city(city_name, state_code):
     # Check db for existing city, state
     city = City.query.filter_by(city=city_name, state=state_code)
     if city.count(): # Check if city already exists
-        return city.id
+        return city[0].id
     else: # Else create new city entry in db
         city_id = ''
         new_city = City(city=city_name, state=state_code)
@@ -346,10 +346,38 @@ def edit_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-  # TODO: take values from the form submitted, and update existing
-  # artist record with ID <artist_id> using the new attributes
+    artist = Artist.query.get(artist_id)
+    error = False
+    try:
+        # Check db for submitted city, state
+        city_name = request.form.get('city')
+        state_code = request.form.get('state')
+        cityid = get_city(city_name, state_code)
+        # EO Check db for submitted city, state
+        # Update fields
+        artist.name = request.form.get('name')
+        artist.cityid = cityid
+        artist.phone = request.form.get('phone')
+        artist.website = request.form.get('website_link')
+        artist.facebook_link = request.form.get('facebook_link')
+        artist.seeking_venue = bool(request.form.get('seeking_venue')) # bool() to convert into boolean SQLAlchemy likes...
+        artist.seeking_description = request.form.get('seeking_description')
+        artist.image_link = request.form.get('image_link')
+        # EO Update fields
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if error:
+        flash('An error occurred. Artist could not be uppdated.')
+        return redirect(url_for('show_artist', artist_id=artist_id))
+    else:
+        flash('Artist was successfully updated!')
+        return redirect(url_for('show_artist', artist_id=artist_id))
 
-  return redirect(url_for('show_artist', artist_id=artist_id))
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
@@ -371,9 +399,38 @@ def edit_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-  # TODO: take values from the form submitted, and update existing
-  # venue record with ID <venue_id> using the new attributes
-  return redirect(url_for('show_venue', venue_id=venue_id))
+    venue = Venue.query.get(venue_id)
+    error = False
+    try:
+        # Check db for submitted city, state
+        city_name = request.form.get('city')
+        state_code = request.form.get('state')
+        cityid = get_city(city_name, state_code)
+        # EO Check db for submitted city, state
+        # Update fields
+        venue.name = request.form.get('name')
+        venue.address = request.form.get('address')
+        venue.cityid = cityid
+        venue.phone = request.form.get('phone')
+        venue.website = request.form.get('website_link')
+        venue.facebook_link = request.form.get('facebook_link')
+        venue.seeking_talent = bool(request.form.get('seeking_talent')) # bool() to convert into boolean SQLAlchemy likes...
+        venue.seeking_description = request.form.get('seeking_description')
+        venue.image_link = request.form.get('image_link')
+        # EO Update fields
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if error:
+        flash('An error occurred. Venue could not be updated.')
+        return redirect(url_for('show_venue', venue_id=venue_id))
+    else:
+        flash('Venue was successfully updated!')
+        return redirect(url_for('show_venue', venue_id=venue_id))
 
 #  Create Artist
 #  ----------------------------------------------------------------
@@ -446,27 +503,27 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-        show = Show(
-            artistid=request.form.get('artist_id'),
-            venueid=request.form.get('venue_id'),
-            start_time=request.form.get('start_time')
-        )
-        error = False
-        try:
-            db.session.add(show)
-            db.session.commit()
-        except:
-            error = True
-            db.session.rollback()
-            print(sys.exc_info())
-        finally:
-            db.session.close()
-        if error:
-            flash('An error occurred. Show could not be listed.')
-            return render_template('pages/home.html')
-        else:
-            flash('Show was successfully listed!')
-            return render_template('pages/home.html')
+    show = Show(
+        artistid=request.form.get('artist_id'),
+        venueid=request.form.get('venue_id'),
+        start_time=request.form.get('start_time')
+    )
+    error = False
+    try:
+        db.session.add(show)
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if error:
+        flash('An error occurred. Show could not be listed.')
+        return render_template('pages/home.html')
+    else:
+        flash('Show was successfully listed!')
+        return render_template('pages/home.html')
 
 @app.errorhandler(404)
 def not_found_error(error):
