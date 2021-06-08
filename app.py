@@ -122,55 +122,45 @@ def search_venues():
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
-    venue = Venue.query.filter_by(id=venue_id).first()
-    today = date.today()
-    # Upcoming shows
-    upcoming_shows = Show.query.filter(Show.venueid == venue.id, Show.start_time > today).all()
-    shows_upcoming = []
-    for upcoming_show in upcoming_shows:
-        show = {
-            "artist_id": upcoming_show.artist.id,
-            "artist_name": upcoming_show.artist.name,
-            "artist_image_link": upcoming_show.artist.image_link,
-            "start_time": upcoming_show.start_time
+    past_shows = []
+    upcoming_shows = []
+    venue = Venue.query.filter_by(id=venue_id).first() # Get current venue
+    today = date.today() # Get current date
+
+    # Loop over shows
+    for show in venue.shows:
+        temp_show = {
+            "artist_id": show.artist.id,
+            "artist_name": show.artist.name,
+            "artist_image_link": show.artist.image_link,
+            "start_time": show.start_time
         }
-        shows_upcoming.append(show)
-    # EO Upcoming shows
-    # Past shows
-    past_shows = Show.query.filter(Show.venueid == venue.id, Show.start_time <= today).all()
-    shows_past = []
-    for past_show in past_shows:
-        show = {
-            "artist_id": past_show.artist.id,
-            "artist_name": past_show.artist.name,
-            "artist_image_link": past_show.artist.image_link,
-            "start_time": past_show.start_time
-        }
-        shows_past.append(show)
-    # EO Past shows
-    # Generate genre list
+        # Filter into correct list by date
+        if show.start_time.date() > today:
+            upcoming_shows.append(temp_show)
+        else:
+            past_shows.append(temp_show)
+
+    # object class to dict
+    data = vars(venue)
+
+    # Add city data
+    city = venue.city
+    data['city'] = city.city
+    data['state'] = city.state
+
+    # Add genres in correct format
     genres = []
     if isinstance(venue.genres, str):
         genres = venue.genres.split(',')
-    # EO Generate genre list
-    data = {
-      "id": venue.id,
-      "name": venue.name,
-      "address": venue.address,
-      "city": venue.city.city,
-      "state": venue.city.state,
-      "phone": venue.phone,
-      "website": venue.website,
-      "facebook_link": venue.facebook_link,
-      "genres": genres,
-      "seeking_talent": venue.seeking_talent,
-      "seeking_description": venue.seeking_description,
-      "image_link": venue.image_link,
-      "past_shows": shows_past,
-      "upcoming_shows": shows_upcoming,
-      "past_shows_count": len(past_shows),
-      "upcoming_shows_count": len(upcoming_shows)
-    }
+    data['genres'] = genres
+
+    # Add extra shows data
+    data['past_shows'] = past_shows
+    data['upcoming_shows'] = upcoming_shows
+    data['past_shows_count'] = len(past_shows)
+    data['upcoming_shows_count'] = len(upcoming_shows)
+
     return render_template('pages/show_venue.html', venue=data)
 
 #  Create Venue
