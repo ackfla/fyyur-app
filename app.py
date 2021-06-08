@@ -22,7 +22,7 @@ from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
 from datetime import date
-from models import db, Venue, Artist, Show
+from models import db, City, Venue, Artist, Show
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -85,12 +85,21 @@ def index():
 def venues():
   cities = City.query.all();
   data=[]
+  today = date.today()
   for city in cities:
       citydata = {
         "city": city.city,
         "state": city.state,
-        "venues": Venue.query.filter_by(cityid=city.id).all()
+        "venues": []
       }
+      venues = Venue.query.filter_by(cityid=city.id).all()
+      for venue in venues:
+          venue = {
+            "id": venue.id,
+            "name": venue.name,
+            "num_upcoming_shows": Show.query.filter(Show.venueid==venue.id, Show.start_time>today).count()
+          }
+          citydata['venues'].append(venue)
       data.append(citydata)
 
   return render_template('pages/venues.html', areas=data)
