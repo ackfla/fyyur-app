@@ -252,54 +252,45 @@ def search_artists():
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    artist = Artist.query.filter_by(id=artist_id).first()
-    today = date.today()
-    # Upcoming shows
-    upcoming_shows = Show.query.filter(Show.artistid == artist.id, Show.start_time > today).all()
-    shows_upcoming = []
-    for upcoming_show in upcoming_shows:
-        show = {
-            "venue_id": upcoming_show.venue.id,
-            "venue_name": upcoming_show.venue.name,
-            "venue_image_link": upcoming_show.venue.image_link,
-            "start_time": upcoming_show.start_time
+    artist = Artist.query.filter_by(id=artist_id).first() # Get current artist
+    today = date.today() # Get current date
+    past_shows = []
+    upcoming_shows = []
+
+    # Loop over shows
+    for show in artist.shows:
+        temp_show = {
+            "venue_id": show.artist.id,
+            "venue_name": show.artist.name,
+            "venue_image_link": show.artist.image_link,
+            "start_time": show.start_time
         }
-        shows_upcoming.append(show)
-    # EO Upcoming shows
-    # Past shows
-    past_shows = Show.query.filter(Show.artistid == artist.id, Show.start_time <= today).all()
-    shows_past = []
-    for past_show in past_shows:
-        show = {
-            "venue_id": past_show.venue.id,
-            "venue_name": past_show.venue.name,
-            "venue_image_link": past_show.venue.image_link,
-            "start_time": past_show.start_time
-        }
-        shows_past.append(show)
-    # EO Past shows
-    # Generate genre list
+        # Filter into correct list by date
+        if show.start_time.date() > today:
+            upcoming_shows.append(temp_show)
+        else:
+            past_shows.append(temp_show)
+
+    # object class to dict
+    data = vars(artist)
+
+    # Add city data
+    city = artist.city
+    data['city'] = city.city
+    data['state'] = city.state
+
+    # Add genres in correct format
     genres = []
     if isinstance(artist.genres, str):
         genres = artist.genres.split(',')
-    # EO Generate genre list
-    data = {
-      "id": artist.id,
-      "name": artist.name,
-      "city": artist.city.city,
-      "state": artist.city.state,
-      "phone": artist.phone,
-      "website": artist.website,
-      "facebook_link": artist.facebook_link,
-      "genres": genres,
-      "seeking_venue": artist.seeking_venue,
-      "seeking_description": artist.seeking_description,
-      "image_link": artist.image_link,
-      "past_shows": shows_past,
-      "upcoming_shows": shows_upcoming,
-      "past_shows_count": len(past_shows),
-      "upcoming_shows_count": len(upcoming_shows)
-    }
+    data['genres'] = genres
+
+    # Add extra shows data
+    data['past_shows'] = past_shows
+    data['upcoming_shows'] = upcoming_shows
+    data['past_shows_count'] = len(past_shows)
+    data['upcoming_shows_count'] = len(upcoming_shows)
+    
     return render_template('pages/show_artist.html', artist=data)
 
 #  Update
