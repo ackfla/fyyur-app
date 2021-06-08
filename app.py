@@ -124,7 +124,7 @@ def search_venues():
 def show_venue(venue_id):
     past_shows = []
     upcoming_shows = []
-    venue = Venue.query.filter_by(id=venue_id).first() # Get current venue
+    venue = Venue.query.get_or_404(venue_id) # Get current venue
     today = date.today() # Get current date
 
     # Loop over shows
@@ -252,7 +252,7 @@ def search_artists():
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    artist = Artist.query.filter_by(id=artist_id).first() # Get current artist
+    artist = Artist.query.get_or_404(artist_id) # Get current artist
     today = date.today() # Get current date
     past_shows = []
     upcoming_shows = []
@@ -290,15 +290,18 @@ def show_artist(artist_id):
     data['upcoming_shows'] = upcoming_shows
     data['past_shows_count'] = len(past_shows)
     data['upcoming_shows_count'] = len(upcoming_shows)
-    
+
     return render_template('pages/show_artist.html', artist=data)
 
 #  Update
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-  artist = Artist.query.filter_by(id=artist_id).first()
-  form = ArtistForm()
+  artist = Artist.query.get_or_404(artist_id)
+
+
+  form = ArtistForm(obj=artist)
+
   # Populate form with db data
   form.name.data = artist.name
   form.city.data = artist.city.city
@@ -313,7 +316,7 @@ def edit_artist(artist_id):
   # EO Populate form with db data
   return render_template('forms/edit_artist.html', form=form, artist=artist)
 
-@app.route('/artists/<int:artist_id>/edit', methods=['POST'])
+# @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
     artist = Artist.query.get(artist_id)
     error = False
@@ -354,7 +357,7 @@ def edit_artist_submission(artist_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-    venue = Venue.query.filter_by(id=venue_id).first()
+    venue = Venue.query.get_or_404(venue_id)
     form = VenueForm()
     # Populate form with db data
     form.name.data = venue.name
