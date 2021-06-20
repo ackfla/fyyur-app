@@ -396,42 +396,53 @@ def edit_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
+
+    # Get form object
+    form = VenueForm(request.form)
+    # Get venue
     venue = Venue.query.get(venue_id)
-    error = False
-    # Generate genre list
-    genres = request.form.getlist('genres') # Fetch list from form
-    genres =  ",".join(genres) # Convert to comma separated string to store in db
-    # EO Generate genre list
-    try:
-        # Check db for submitted city, state
-        city_name = request.form.get('city')
-        state_code = request.form.get('state')
-        cityid = get_city(city_name, state_code)
-        # EO Check db for submitted city, state
-        # Update fields
-        venue.name = request.form.get('name')
-        venue.address = request.form.get('address')
-        venue.cityid = cityid
-        venue.phone = request.form.get('phone')
-        venue.website = request.form.get('website_link')
-        venue.facebook_link = request.form.get('facebook_link')
-        venue.genres = genres
-        venue.seeking_talent = bool(request.form.get('seeking_talent')) # bool() to convert into boolean SQLAlchemy likes...
-        venue.seeking_description = request.form.get('seeking_description')
-        venue.image_link = request.form.get('image_link')
-        # EO Update fields
-        db.session.commit()
-    except:
-        error = True
-        db.session.rollback()
-    finally:
-        db.session.close()
-    if error:
-        flash('An error occurred. Venue could not be updated.')
-        return redirect(url_for('show_venue', venue_id=venue_id))
+
+    # Check form validation
+    if form.validate():
+        error = False
+        # Generate genre list
+        genres = request.form.getlist('genres') # Fetch list from form
+        genres =  ",".join(genres) # Convert to comma separated string to store in db
+        # EO Generate genre list
+        try:
+            # Check db for submitted city, state
+            city_name = request.form.get('city')
+            state_code = request.form.get('state')
+            cityid = get_city(city_name, state_code)
+            # EO Check db for submitted city, state
+            # Update fields
+            venue.name = request.form.get('name')
+            venue.address = request.form.get('address')
+            venue.cityid = cityid
+            venue.phone = request.form.get('phone')
+            venue.website = request.form.get('website_link')
+            venue.facebook_link = request.form.get('facebook_link')
+            venue.genres = genres
+            venue.seeking_talent = bool(request.form.get('seeking_talent')) # bool() to convert into boolean SQLAlchemy likes...
+            venue.seeking_description = request.form.get('seeking_description')
+            venue.image_link = request.form.get('image_link')
+            # EO Update fields
+            db.session.commit()
+        except:
+            error = True
+            db.session.rollback()
+        finally:
+            db.session.close()
+        if error:
+            flash('An error occurred. Venue could not be updated.')
+            return redirect(url_for('show_venue', venue_id=venue_id))
+        else:
+            flash('Venue was successfully updated!')
+            return redirect(url_for('show_venue', venue_id=venue_id))
+
     else:
-        flash('Venue was successfully updated!')
-        return redirect(url_for('show_venue', venue_id=venue_id))
+        # On form validation error redirect to back to prefilled form
+        return render_template('forms/edit_venue.html', form=form, venue=venue)
 
 #  Create Artist
 #  ----------------------------------------------------------------
