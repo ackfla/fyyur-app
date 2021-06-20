@@ -120,7 +120,6 @@ class VenueForm(Form):
         'image_link'
     )
     genres = SelectMultipleField(
-        # TODO implement enum restriction
         'genres', validators=[DataRequired()],
         choices=genre_choices
     )
@@ -137,6 +136,17 @@ class VenueForm(Form):
         'seeking_description'
     )
 
+    def validate(self):
+        rv = Form.validate(self)
+        # Custom validation
+        genres = [genre_choice[0] for genre_choice in genre_choices] # Get all genres in list
+        if not set(self.genres.data).issubset(genres): # Check if selected generes belong in list
+            self.genres.errors.append('Invalid genres') # If not add error
+        # Form validation
+        if not rv:
+            return False
+        # if pass validation
+        return True
 
 
 class ArtistForm(Form):
@@ -179,4 +189,16 @@ class ArtistForm(Form):
 
     seeking_description = StringField(
             'seeking_description'
-     )
+    )
+
+    def validate(self):
+        rv = Form.validate(self)
+        # Custom validation
+        genres = [genre_choice[0] for genre_choice in genre_choices] # Get all genres in list
+        if not set(self.genres.data).issubset(genres): # Check if selected generes belong in list
+            self.genres.errors.append('Invalid genres') # If not add error
+        # Form validation
+        if not rv:
+            return False
+        # if pass validation
+        return True
