@@ -309,7 +309,6 @@ def show_artist(artist_id):
 def edit_artist(artist_id):
   artist = Artist.query.get_or_404(artist_id)
 
-
   form = ArtistForm(obj=artist)
 
   # Populate form with db data
@@ -328,41 +327,52 @@ def edit_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
+
+    # Get form object
+    form = ArtistForm(request.form)
+    # Get artist
     artist = Artist.query.get(artist_id)
-    error = False
-    # Generate genre list
-    genres = request.form.getlist('genres') # Fetch list from form
-    genres =  ",".join(genres) # Convert to comma separated string to store in db
-    # EO Generate genre list
-    try:
-        # Check db for submitted city, state
-        city_name = request.form.get('city')
-        state_code = request.form.get('state')
-        cityid = get_city(city_name, state_code)
-        # EO Check db for submitted city, state
-        # Update fields
-        artist.name = request.form.get('name')
-        artist.cityid = cityid
-        artist.phone = request.form.get('phone')
-        artist.website = request.form.get('website_link')
-        artist.genres = genres
-        artist.facebook_link = request.form.get('facebook_link')
-        artist.seeking_venue = bool(request.form.get('seeking_venue')) # bool() to convert into boolean SQLAlchemy likes...
-        artist.seeking_description = request.form.get('seeking_description')
-        artist.image_link = request.form.get('image_link')
-        # EO Update fields
-        db.session.commit()
-    except:
-        error = True
-        db.session.rollback()
-    finally:
-        db.session.close()
-    if error:
-        flash('An error occurred. Artist could not be uppdated.')
-        return redirect(url_for('show_artist', artist_id=artist_id))
+
+    # Check form validation
+    if form.validate():
+        error = False
+        # Generate genre list
+        genres = request.form.getlist('genres') # Fetch list from form
+        genres =  ",".join(genres) # Convert to comma separated string to store in db
+        # EO Generate genre list
+        try:
+            # Check db for submitted city, state
+            city_name = request.form.get('city')
+            state_code = request.form.get('state')
+            cityid = get_city(city_name, state_code)
+            # EO Check db for submitted city, state
+            # Update fields
+            artist.name = request.form.get('name')
+            artist.cityid = cityid
+            artist.phone = request.form.get('phone')
+            artist.website = request.form.get('website_link')
+            artist.genres = genres
+            artist.facebook_link = request.form.get('facebook_link')
+            artist.seeking_venue = bool(request.form.get('seeking_venue')) # bool() to convert into boolean SQLAlchemy likes...
+            artist.seeking_description = request.form.get('seeking_description')
+            artist.image_link = request.form.get('image_link')
+            # EO Update fields
+            db.session.commit()
+        except:
+            error = True
+            db.session.rollback()
+        finally:
+            db.session.close()
+        if error:
+            flash('An error occurred. Artist could not be uppdated.')
+            return redirect(url_for('show_artist', artist_id=artist_id))
+        else:
+            flash('Artist was successfully updated!')
+            return redirect(url_for('show_artist', artist_id=artist_id))
+
     else:
-        flash('Artist was successfully updated!')
-        return redirect(url_for('show_artist', artist_id=artist_id))
+        # On form validation error redirect to back to prefilled form
+        return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
