@@ -100,7 +100,9 @@ class VenueForm(Form):
         'city', validators=[DataRequired()]
     )
     state = SelectField(
-        'state', validators=[DataRequired()],
+        'state', validators=[
+            AnyOf([state_choice[0] for state_choice in state_choices], message='Invalid state')
+        ],
         choices=state_choices
     )
     address = StringField(
@@ -145,7 +147,9 @@ class ArtistForm(Form):
         'city', validators=[DataRequired()]
     )
     state = SelectField(
-        'state', validators=[DataRequired()],
+        'state', validators=[
+            AnyOf([state_choice[0] for state_choice in state_choices], message='Invalid state')
+        ],
         choices=state_choices
     )
     phone = StringField(
