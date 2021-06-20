@@ -433,41 +433,50 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-    # Check db for submitted city, state
-    city_name = request.form.get('city')
-    state_code = request.form.get('state')
-    cityid = get_city(city_name, state_code)
-    # EO Check db for submitted city, state
-    # Generate genre list
-    genres = request.form.getlist('genres') # Fetch list from form
-    genres =  ",".join(genres) # Convert to comma separated string to store in db
-    # EO Generate genre list
-    artist = Artist(
-        name=request.form.get('name'),
-        cityid=cityid,
-        phone=request.form.get('phone'),
-        website=request.form.get('website_link'),
-        facebook_link=request.form.get('facebook_link'),
-        genres=genres,
-        seeking_venue=bool(request.form.get('seeking_venue')), # bool() to convert into boolean SQLAlchemy likes...
-        seeking_description=request.form.get('seeking_description'),
-        image_link=request.form.get('image_link')
-    )
-    error = False
-    try:
-        db.session.add(artist)
-        db.session.commit()
-    except:
-        error = True
-        db.session.rollback()
-    finally:
-        db.session.close()
-    if error:
-        flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
-        return render_template('pages/home.html')
+
+    # Get form object
+    form = ArtistForm(request.form)
+
+    # Check form validation
+    if form.validate():
+        # Check db for submitted city, state
+        city_name = request.form.get('city')
+        state_code = request.form.get('state')
+        cityid = get_city(city_name, state_code)
+        # EO Check db for submitted city, state
+        # Generate genre list
+        genres = request.form.getlist('genres') # Fetch list from form
+        genres =  ",".join(genres) # Convert to comma separated string to store in db
+        # EO Generate genre list
+        artist = Artist(
+            name=request.form.get('name'),
+            cityid=cityid,
+            phone=request.form.get('phone'),
+            website=request.form.get('website_link'),
+            facebook_link=request.form.get('facebook_link'),
+            genres=genres,
+            seeking_venue=bool(request.form.get('seeking_venue')), # bool() to convert into boolean SQLAlchemy likes...
+            seeking_description=request.form.get('seeking_description'),
+            image_link=request.form.get('image_link')
+        )
+        error = False
+        try:
+            db.session.add(artist)
+            db.session.commit()
+        except:
+            error = True
+            db.session.rollback()
+        finally:
+            db.session.close()
+        if error:
+            flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
+            return render_template('pages/home.html')
+        else:
+            flash('Artist ' + request.form['name'] + ' was successfully listed!')
+            return render_template('pages/home.html')
     else:
-        flash('Artist ' + request.form['name'] + ' was successfully listed!')
-        return render_template('pages/home.html')
+        # On form validation error redirect to back to prefilled form
+        return render_template('forms/new_artist.html', form=form)
 
 #  Shows
 #  ----------------------------------------------------------------
