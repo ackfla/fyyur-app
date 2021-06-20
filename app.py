@@ -173,42 +173,52 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    # Check db for submitted city, state
-    city_name = request.form.get('city')
-    state_code = request.form.get('state')
-    cityid = get_city(city_name, state_code)
-    # EO Check db for submitted city, state
-    # Generate genre list
-    genres = request.form.getlist('genres') # Fetch list from form
-    genres =  ",".join(genres) # Convert to comma separated string to store in db
-    # EO Generate genre list
-    venue = Venue(
-        name=request.form.get('name'),
-        address=request.form.get('address'),
-        cityid=cityid,
-        phone=request.form.get('phone'),
-        website=request.form.get('website_link'),
-        genres=genres,
-        facebook_link=request.form.get('facebook_link'),
-        seeking_talent=bool(request.form.get('seeking_talent')), # bool() to convert into boolean SQLAlchemy likes...
-        seeking_description=request.form.get('seeking_description'),
-        image_link=request.form.get('image_link')
-    )
-    error = False
-    try:
-        db.session.add(venue)
-        db.session.commit()
-    except:
-        error = True
-        db.session.rollback()
-    finally:
-        db.session.close()
-    if error:
-        flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
-        return render_template('pages/home.html')
+
+    # Get form object
+    form = VenueForm(request.form)
+
+    # Check form validation
+    if form.validate():
+        # Check db for submitted city, state
+        city_name = request.form.get('city')
+        state_code = request.form.get('state')
+        cityid = get_city(city_name, state_code)
+        # EO Check db for submitted city, state
+        # Generate genre list
+        genres = request.form.getlist('genres') # Fetch list from form
+        genres =  ",".join(genres) # Convert to comma separated string to store in db
+        # EO Generate genre list
+        venue = Venue(
+            name=request.form.get('name'),
+            address=request.form.get('address'),
+            cityid=cityid,
+            phone=request.form.get('phone'),
+            website=request.form.get('website_link'),
+            genres=genres,
+            facebook_link=request.form.get('facebook_link'),
+            seeking_talent=bool(request.form.get('seeking_talent')), # bool() to convert into boolean SQLAlchemy likes...
+            seeking_description=request.form.get('seeking_description'),
+            image_link=request.form.get('image_link')
+        )
+        error = False
+        try:
+            db.session.add(venue)
+            db.session.commit()
+        except:
+            error = True
+            db.session.rollback()
+        finally:
+            db.session.close()
+        if error:
+            flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
+            return render_template('pages/home.html')
+        else:
+            flash('Venue ' + request.form['name'] + ' was successfully listed!')
+            return render_template('pages/home.html')
+
     else:
-        flash('Venue ' + request.form['name'] + ' was successfully listed!')
-        return render_template('pages/home.html')
+        # On form validation error redirect to back to prefilled form
+        return render_template('forms/new_venue.html', form=form)
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
