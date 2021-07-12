@@ -125,10 +125,11 @@ def show_venue(venue_id):
     past_shows = []
     upcoming_shows = []
     venue = Venue.query.get_or_404(venue_id) # Get current venue
+    shows = db.session.query(Show).join(Venue, Venue.id == Show.venueid).all() # Use join statement
     today = date.today() # Get current date
 
     # Loop over shows
-    for show in venue.shows:
+    for show in shows:
         temp_show = {
             "artist_id": show.artist.id,
             "artist_name": show.artist.name,
@@ -263,12 +264,13 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
     artist = Artist.query.get_or_404(artist_id) # Get current artist
+    shows = db.session.query(Show).join(Artist, Artist.id == Show.artistid).all() # Use join statement
     today = date.today() # Get current date
     past_shows = []
     upcoming_shows = []
 
     # Loop over shows
-    for show in artist.shows:
+    for show in shows:
         temp_show = {
             "venue_id": show.artist.id,
             "venue_name": show.artist.name,
